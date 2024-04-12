@@ -149,3 +149,27 @@ func TestSlogHandler_Handle(t *testing.T) {
 		}
 	})
 }
+
+func TestMiddleware(t *testing.T) {
+	var visited bool
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		visited = true
+		if rid := FromContext(r.Context()); rid != "foo" {
+			t.Errorf("unxpected request id in context; got %q", rid)
+		}
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	res := httptest.NewRecorder()
+
+	g := IdentityGenerator("foo")
+	Middleware(g)(h).ServeHTTP(res, req)
+	if !visited {
+		t.Fatal("handler must be visited")
+	}
+
+	rid := res.Header().Get(DefaultHeaders()[0])
+	if rid != "foo" {
+		t.Errorf("unxpected request id in response; got %q", rid)
+	}
+}

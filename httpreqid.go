@@ -51,6 +51,14 @@ func Handler(h http.Handler, g Generator, headerNames ...string) http.Handler {
 	return middleware(g, headerNames)(h)
 }
 
+// Middleware creates a new middleware that appends a request ID to the response header and the request context.
+func Middleware(g Generator, headerNames ...string) func(http.Handler) http.Handler {
+	if len(headerNames) == 0 {
+		headerNames = DefaultHeaders()
+	}
+	return middleware(g, headerNames)
+}
+
 func middleware(g Generator, headerNames []string) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
